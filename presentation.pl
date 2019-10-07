@@ -10,6 +10,38 @@ app->start;
 
 __DATA__
 
+@@ revealjs_preinit.js.ep
+
+init.dependencies.push({src: 'https://cdn.jsdelivr.net/npm/@gitgraph/js'});
+
+let graphOptions = {
+  orientation: 'horizontal',
+  author: 'Joel Berger <joel.a.berger@gmail.com>',
+};
+
+function initGraph(elem) {
+  "use strict";
+  try {
+    const f = new Function('graph', elem.innerHTML);
+    const container = document.createElement('div');
+    elem.parentNode.insertBefore(container, elem.nextSibling);
+    elem.parentNode.removeChild(elem);
+    const graph = new GitgraphJS.createGitgraph(container, Object.assign({}, graphOptions, elem.dataset));
+    f(graph);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+Reveal.addEventListener('slidechanged', (e) => {
+  const graphs = e.currentSlide.querySelectorAll('script[type="text/gitgraph"]');
+  if (! graphs.length) return;
+
+  graphs.forEach(container => initGraph(container));
+  // force reveal to compute top offset
+  Reveal.layout();
+});
+
 @@ index.html.ep
 
 <style>
@@ -406,3 +438,89 @@ These expire after a shorter time (usually 30 days)
 * don't do this to shared branches!
 % end
 
+%= markdown_section begin
+## Merge vs Rebase
+% end
+
+<section>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+
+    master.commit({dotText: 'B', subject: ''});
+
+    feature.commit({dotText: 'Z', subject: ''});
+
+    master.commit({dotText: 'C', subject: ''});
+</script>
+</section>
+
+<section>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+
+    master.commit({dotText: 'B', subject: ''});
+
+    feature.commit({dotText: 'Z', subject: ''});
+
+    master.commit({dotText: 'C', subject: ''});
+
+    master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+</script>
+</section>
+
+<section>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+
+    master.commit({dotText: 'B', subject: ''});
+
+    feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+    feature.commit({dotText: 'Z', subject: ''});
+
+    master.commit({dotText: 'C', subject: ''});
+
+    master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+</script>
+</section>
+
+<section>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    master.commit({dotText: 'B', subject: ''});
+    master.commit({dotText: 'C', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: "X'", subject: ''});
+    feature.commit({dotText: "Z'", subject: ''});
+</script>
+</section>
+
+<section>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    master.commit({dotText: 'B', subject: ''});
+    master.commit({dotText: 'C', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: "X'", subject: ''});
+    feature.commit({dotText: "Z'", subject: ''});
+
+    master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+</script>
+</section>

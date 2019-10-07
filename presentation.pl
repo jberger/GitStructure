@@ -193,7 +193,7 @@ Identified by _its_ sha1 hash
 % end
 
 %= markdown_section begin
-## The .git Directory  
+## The .git Directory
 
 * `.git/` contains the entire repository
 * the working directory is just your workspace
@@ -205,7 +205,7 @@ Identified by _its_ sha1 hash
 %= markdown_section begin
 ### Objects
 * live in the `.git/objects` directory of a project
-* inspect with 
+* inspect with
   - type: `git cat-file -t`
   - content: `git cat-file -p`
 % end
@@ -223,13 +223,13 @@ committer Joel Berger <joel.a.berger@gmail.com> 1556634504 -0500
 $ git cat-file -t 2f7e309f3414aa204bf1468b7510567e1cf3233c
 tree
 $ git cat-file -p 2f7e309f3414aa204bf1468b7510567e1cf3233c
-100755 blob c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4	Perloku
-100644 blob c91114a2f3eae6bfa6cb24a341a5a54186a0ea97	README.pod
-100644 blob 041ae46cc95ce3f2e8f52e0df3df422099bf3974	cpanfile
-040000 tree 57321dcf90135b3e33e0c18db051316a08435053	ex
-100755 blob a88092e7e5489b581a61fa085da70af535f3e80f	presentation.pl
-040000 tree 7cde0b756cfd92a349fd41a27f8685bbac982cbc	public
-040000 tree 510f6121f6023df413bbbb8f11661e85d55db901	templates
+100755 blob c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4  Perloku
+100644 blob c91114a2f3eae6bfa6cb24a341a5a54186a0ea97  README.pod
+100644 blob 041ae46cc95ce3f2e8f52e0df3df422099bf3974  cpanfile
+040000 tree 57321dcf90135b3e33e0c18db051316a08435053  ex
+100755 blob a88092e7e5489b581a61fa085da70af535f3e80f  presentation.pl
+040000 tree 7cde0b756cfd92a349fd41a27f8685bbac982cbc  public
+040000 tree 510f6121f6023df413bbbb8f11661e85d55db901  templates
 
 $ git cat-file -t c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4
 blob
@@ -240,11 +240,11 @@ $ git cat-file -p c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4
 % end
 
 %= markdown_section begin
-### The Commit 
+### The Commit
 * is named by its digest
 * contains data that refers to other objects by digest
 * at each level each digest can be verified
-* therefore: 
+* therefore:
 
 <blockquote class="fragment">
   The commit hash id is an identifier that digests the entire history of the repository up to that point.
@@ -252,13 +252,14 @@ $ git cat-file -p c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4
 % end
 
 %= markdown_section begin
-Always using SHAs to refer to objects is annoying, so ... 
+Always using SHAs to refer to objects is annoying, so ...
 % end
 
 %= markdown_section begin
 ## ... We Have References
 
 * branches
+  - remotes
 * tags
 * HEAD
 % end
@@ -285,7 +286,16 @@ Always using SHAs to refer to objects is annoying, so ...
 
 * pointer to the current branch (thus current commit)
 * lives in `.git/HEAD`
-% end 
+% end
+
+%= markdown_section begin
+## Remote Branches
+
+* a special type of branch
+* content from remote repo
+* can't change locally unless you also change remote
+* lives in `.git/refs/remotes`
+% end
 
 %= markdown_section begin
 ## Tags
@@ -299,11 +309,45 @@ Always using SHAs to refer to objects is annoying, so ...
 % end
 
 %= markdown_section begin
+## Actions
+% end
+
+%= markdown_section begin
+### Update Current Branch
+* `git add` stage changes for a commit
+* `git reset` unstage changes
+* `git commit` commit staged changes
+  - move branch pointer
+* `git merge` create a commit with multiple parents
+% end
+
+%= markdown_section begin
+### Change Current Branch
+* `git checkout` get contents of target
+  - if branch, set HEAD
+  - if commit, detatch HEAD
+  - if file, get contents
+* `git reset --hard` move branch pointer
+  - discards changes!
+% end
+
+%= markdown_section begin
+### Working With Remotes
+* `git remote` configure remote sources
+* `git fetch` sync tracked branches
+* `git pull` merge remote changes
+* `git pull --rebase` rebase onto remote changes
+* `git push` send your changes back to source
+% end
+
+%= markdown_section begin
 ## Object Lifetime
 
 Objects will live in `.git/objects` as long as
 
-* some other object references it
+* something references it
+  - object
+  - reference
 * timeout expires (usually 90 days)
 % end
 
@@ -328,4 +372,36 @@ e021a2815 HEAD@{8}: rebase: return result of GetOptionsFromArray in getopt().
 These expire after a shorter time (usually 30 days)
 % end
 
+%= markdown_section begin
+## Destructive Actions
+
+* "destructive" actions "change" content of commits
+* commits are immutable!
+% end
+
+%= markdown_section begin
+## Commits Are Immutable!
+
+* "changed" commits:
+  - new content
+  - new SHA
+  - update branch (only actual change)
+* old version still exist, recover by:
+  - knowing original SHAs
+  - using `reflog`
+  - copies from other clones
+% end
+
+%= markdown_section begin
+* `git commit --amend` change previous commit and/or message
+* `git rebase` change commit/branch's parents
+* `git rebase -i`
+  - change commit order
+  - "squash"/"fixup" commits
+% end
+
+%= markdown_section begin
+* `git push --force-with-lease` push after changing history
+* don't do this to shared branches!
+% end
 

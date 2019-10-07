@@ -13,11 +13,12 @@ __DATA__
 @@ index.html.ep
 
 <style>
-  .reveal pre code { padding: 20px }
-  code.hljs.inline {
-    display: initial;
-    font-size: 80%;
-    margin: 0 10px 0 10px;
+  .reveal code {
+    padding: 0px 8px;
+    background-color: #404040;
+  }
+  .reveal pre code {
+    padding: 20px;
   }
 </style>
 

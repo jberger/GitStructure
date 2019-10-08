@@ -70,6 +70,7 @@ Does Git seem
 Git is entirely driven by its structure
 
 * commit graph
+* simple data structures
 * file backed
 % end
 
@@ -148,11 +149,18 @@ $ echo 'hello' | sha1sum | awk '{print $1}'
 f572d396fae9206628714fb2ce00f72e94f2258f
 $ echo 'hellp' | sha1sum | awk '{print $1}'
 c2e8afc57a12fd9224718c1fa8bbf1b8a02d8390
+$ echo 'hdllp' | sha1sum | awk '{print $1}'
+41af16791b5a836713468cce8daa2f795983d075
 ```
 % end
 
 %= markdown_section begin
 ## What Does This Have To Do With Git?
+% end
+
+%= markdown_section begin
+<img style="width: 50%" src="talktitlecard.png">
+<cite><small><https://www.youtube.com/watch?v=4XpnKHJAok8></small></cite>
 % end
 
 %= markdown_section begin
@@ -218,7 +226,7 @@ The commit hash id is an identifier that digests the entire history of the repos
 ## A Commit Is
 
 * tree
-* parent(s)
+* parent commit(s)
 * commit message
 * metadata
 
@@ -304,6 +312,7 @@ Always using SHAs to refer to objects is annoying, so ...
 * or just `cat` the file contents
 % end
 
+<section>
 %= markdown_section begin
 ## Branches
 
@@ -315,10 +324,25 @@ Always using SHAs to refer to objects is annoying, so ...
 % end
 
 %= markdown_section begin
+```shell
+$ cat .git/refs/heads/master
+2fdb02fdcd1a3d174fe53bd8a94cd56c72dc93dc
+$ git cat-file -t 2fdb02fdcd1a3d174fe53bd8a94cd56c72dc93dc
+commit
+```
+% end
+</section>
+
+%= markdown_section begin
 ## The Special HEAD Rereference
 
 * pointer to the current branch (thus current commit)
 * lives in `.git/HEAD`
+
+```shell
+$ cat .git/HEAD
+ref: refs/heads/master
+```
 % end
 
 %= markdown_section begin
@@ -369,7 +393,7 @@ Always using SHAs to refer to objects is annoying, so ...
 * `git remote` configure remote sources
 * `git fetch` sync tracked branches
 * `git pull` merge remote changes
-* `git pull --rebase` rebase onto remote changes
+  - `git fetch` + `git merge`
 * `git push` send your changes back to source
 % end
 
@@ -563,7 +587,10 @@ These expire after a shorter time (usually 30 days)
         feature.commit({dotText: "X'", subject: ''});
     </script>
     <ul>
-      <li><code>git pull --rebase</code></li>
+      <li>
+        <code>git pull --rebase</code>
+        <ul><li><code>git fetch</code> + <code>git rebase</code></li></ul>
+      </li>
     </ul>
   </section>
   <section>
@@ -715,3 +742,8 @@ These expire after a shorter time (usually 30 days)
     <ul>
   </section>
 </section>
+
+%#TODO use example above
+%#TODO git reset --hard for absolute checkout
+%#TODO consider additional intermediary summaries
+%#TODO final summary

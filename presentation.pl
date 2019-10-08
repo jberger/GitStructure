@@ -4,8 +4,6 @@ plugin 'RevealJS';
 
 any '/' => { template => 'index', layout => 'revealjs' };
 
-#XXX example: https://github.com/ServerCentral/SCOPE/pull/124
-
 app->start;
 
 __DATA__
@@ -293,6 +291,18 @@ $ git cat-file -p c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4
 % end
 
 %= markdown_section begin
+## But wait ...
+
+... if that's true ...
+% end
+
+%= markdown_section begin
+## Major Takeaway
+
+Commits are immutable!
+% end
+
+%= markdown_section begin
 Always using SHAs to refer to objects is annoying, so ...
 % end
 
@@ -432,12 +442,14 @@ These expire after a shorter time (usually 30 days)
 %= markdown_section begin
 ## Destructive Actions
 
-* "destructive" actions "change" content of commits
-* commits are immutable!
+"destructive" actions "change" content of commits
+
+* commits are immutable
+* objects are long-lived
 % end
 
 %= markdown_section begin
-## Commits Are Immutable!
+## Undoing "Destructive" Actions
 
 * "changed" commits:
   - new content
@@ -446,10 +458,19 @@ These expire after a shorter time (usually 30 days)
 * old version still exist, recover by:
   - knowing original SHAs
   - using `reflog`
-  - copies from other clones
+  - copies from other branches, remotes, clones
+* worst case scenario `git reset --hard`
 % end
 
 %= markdown_section begin
+## Major Takeaway
+
+It is very hard to actually lose history, even if you change it.
+% end
+
+%= markdown_section begin
+## "Destructive" Actions
+
 * `git commit --amend` change previous commit and/or message
 * `git rebase` change commit/branch's parents
 * `git rebase -i`
@@ -458,6 +479,8 @@ These expire after a shorter time (usually 30 days)
 % end
 
 %= markdown_section begin
+## Destructive Actions on Remotes
+
 * `git push --force-with-lease` push after changing history
 * don't do this to shared branches!
 % end
@@ -743,7 +766,14 @@ These expire after a shorter time (usually 30 days)
   </section>
 </section>
 
-%#TODO use example above
+%#XXX example: https://github.com/ServerCentral/SCOPE/pull/124
 %#TODO git reset --hard for absolute checkout
-%#TODO consider additional intermediary summaries
-%#TODO final summary
+
+%= markdown_section begin
+### Summary
+
+* Git data is simple, easy to inspect.
+* Commit id digests entire history of the repo.
+* Commits are immutable!
+* Hard to actually lose history, even if you change it.
+% end

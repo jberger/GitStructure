@@ -439,10 +439,11 @@ These expire after a shorter time (usually 30 days)
 % end
 
 %= markdown_section begin
-## Merge vs Rebase
+## Types of Merges
 % end
 
 <section>
+<h3>Standard Merge</h3>
 <script type="text/gitgraph">
     const master = graph.branch("master");
     master.commit({dotText: 'A', subject: ''});
@@ -452,13 +453,19 @@ These expire after a shorter time (usually 30 days)
 
     master.commit({dotText: 'B', subject: ''});
 
-    feature.commit({dotText: 'Z', subject: ''});
-
-    master.commit({dotText: 'C', subject: ''});
+    master.merge({branch: feature, commitOptions: {dotText: 'C', subject: ''}});
 </script>
 </section>
 
 <section>
+<h3>Fast-Forward (FF) Merge</h3>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+</script>
 <script type="text/gitgraph">
     const master = graph.branch("master");
     master.commit({dotText: 'A', subject: ''});
@@ -466,61 +473,245 @@ These expire after a shorter time (usually 30 days)
     const feature = graph.branch("feature");
     feature.commit({dotText: 'X', subject: ''});
 
-    master.commit({dotText: 'B', subject: ''});
-
-    feature.commit({dotText: 'Z', subject: ''});
-
-    master.commit({dotText: 'C', subject: ''});
-
-    master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+    master.merge({branch: feature, fastForward: true});
 </script>
+  <ul>
+    <li>Not really a merge, just moves pointer</li>
+    <li>Only possible when parent has not diverged</li>
+  </ul>
+</section>
+
+%= markdown_section begin
+## Push-to-Remote Requires FF
+
+(by default)
+% end
+
+<section>
+  <section>
+    <h3>Resolving A Remote Conflict</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+    </script>
+  </section>
+  <section>
+    <h3>First "Merge-Back" From Remote</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+
+        feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+    </script>
+    <ul>
+      <li><code>git pull</code></li>
+    </ul>
+  </section>
+  <section>
+    <h3>Now Push As FF</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch({name: "origin/feature", showLabel: false});
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+
+        feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+
+        master.merge({branch: feature, fastForward: true});
+    </script>
+    <ul>
+      <li><code>git push</code></li>
+      <li>Extra merge commit to audit</li>
+    </ul>
+  </section>
 </section>
 
 <section>
-<script type="text/gitgraph">
-    const master = graph.branch("master");
-    master.commit({dotText: 'A', subject: ''});
+  <section>
+    <h3>Resolving A Remote Conflict (Simple Rebase)</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
 
-    const feature = graph.branch("feature");
-    feature.commit({dotText: 'X', subject: ''});
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
 
-    master.commit({dotText: 'B', subject: ''});
+        master.commit({dotText: 'B', subject: ''});
+    </script>
+  </section>
+  <section>
+    <h3>Rebase Against Remote</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+        master.commit({dotText: 'B', subject: ''});
 
-    feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
-    feature.commit({dotText: 'Z', subject: ''});
+        const feature = graph.branch("feature");
+        feature.commit({dotText: "X'", subject: ''});
+    </script>
+    <ul>
+      <li><code>git pull --rebase</code></li>
+    </ul>
+  </section>
+  <section>
+    <h3>Now Push As FF</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+        master.commit({dotText: 'B', subject: ''});
 
-    master.commit({dotText: 'C', subject: ''});
+        const feature = graph.branch("feature");
+        feature.commit({dotText: "X'", subject: ''});
 
-    master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
-</script>
+        master.merge({branch: feature, fastForward: true});
+    </script>
+    <ul>
+      <li><code>git push</code></li>
+      <li>Yay, no merge commits!</li>
+    </ul>
+  </section>
 </section>
 
 <section>
-<script type="text/gitgraph">
-    const master = graph.branch("master");
-    master.commit({dotText: 'A', subject: ''});
+  <section>
+    <h2>More Complex Merge vs Rebase</h2>
+  </section>
 
-    master.commit({dotText: 'B', subject: ''});
-    master.commit({dotText: 'C', subject: ''});
+  <section>
+    <h3>Progress On Both Branches</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
 
-    const feature = graph.branch("feature");
-    feature.commit({dotText: "X'", subject: ''});
-    feature.commit({dotText: "Z'", subject: ''});
-</script>
-</section>
+      const feature = graph.branch("feature");
+      feature.commit({dotText: 'X', subject: ''});
 
-<section>
-<script type="text/gitgraph">
-    const master = graph.branch("master");
-    master.commit({dotText: 'A', subject: ''});
+      master.commit({dotText: 'B', subject: ''});
 
-    master.commit({dotText: 'B', subject: ''});
-    master.commit({dotText: 'C', subject: ''});
+      feature.commit({dotText: 'Z', subject: ''});
 
-    const feature = graph.branch("feature");
-    feature.commit({dotText: "X'", subject: ''});
-    feature.commit({dotText: "Z'", subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+  </script>
+  </section>
 
-    master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
-</script>
+  <section>
+    <h3>Merge Is Not Terrible Here</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: 'X', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+
+      feature.commit({dotText: 'Z', subject: ''});
+
+      master.commit({dotText: 'C', subject: ''});
+
+      master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+  </script>
+    <ul>
+      <li>Any conflict appears on PR</li>
+      <li>Reasonably simple history for reviewer</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>But Sometime The History Is Messy</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: 'X', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+
+      feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+      feature.commit({dotText: 'Z', subject: ''});
+
+      master.commit({dotText: 'C', subject: ''});
+
+      master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+  </script>
+    <ul>
+      <li>Any conflict appears on PR</li>
+      <li>Difficult history for reviewer</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Before Merging Feature, Rebase!</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: "X'", subject: ''});
+      feature.commit({dotText: "Z'", subject: ''});
+  </script>
+    <ul>
+      <li>Author can fix conflicts before PR</li>
+      <li>No merge history for reviewer to consider</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>FF Merge Loses Branch</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: "X'", subject: ''});
+      feature.commit({dotText: "Z'", subject: ''});
+
+      master.merge({branch: feature, fastForward: true});
+  </script>
+    <ul>
+      <li>Technically Ok</li>
+      <li>Nice to remember work on branch</li>
+    </ul>
+  </section>
+
+  <section>
+  <h3>Preserve Record of Branch</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: "X'", subject: ''});
+      feature.commit({dotText: "Z'", subject: ''});
+
+      master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+  </script>
+    <ul>
+      <li><code>git merge --no-ff</code></li>
+      <li>Can still push to remote, the "merge" is FF-able</li>
+    <ul>
+  </section>
 </section>

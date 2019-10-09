@@ -72,6 +72,10 @@ Git is entirely driven by its structure
 * file backed
 % end
 
+<section>
+  <h1 style="color: red">Low Level</h2>
+</section>
+
 %= markdown_section begin
 The graph is built of these three concepts
 
@@ -209,6 +213,17 @@ The commit hash id is an identifier that digests the entire history of the repos
 % end
 
 %= markdown_section begin
+## The .git Directory
+
+* `.git/` contains the entire repository
+* the working directory is just your workspace
+  - you don't need it
+  - used to stage changes
+* repo without working files is called "bare"
+% end
+
+<section>
+%= markdown_section begin
 ## Git Objects
 
 * blob (content, ie file or other metadata)
@@ -221,6 +236,15 @@ The commit hash id is an identifier that digests the entire history of the repos
 % end
 
 %= markdown_section begin
+### Objects
+* live in the `.git/objects` directory of a project
+* inspect with
+  - type: `git cat-file -t`
+  - content: `git cat-file -p`
+% end
+</section>
+
+%= markdown_section begin
 ## A Commit Is
 
 * tree
@@ -229,24 +253,6 @@ The commit hash id is an identifier that digests the entire history of the repos
 * metadata
 
 Identified by _its_ sha1 hash
-% end
-
-%= markdown_section begin
-## The .git Directory
-
-* `.git/` contains the entire repository
-* the working directory is just your workspace
-  - you don't need it
-  - used to stage changes
-* repo without working files is called "bare"
-% end
-
-%= markdown_section begin
-### Objects
-* live in the `.git/objects` directory of a project
-* inspect with
-  - type: `git cat-file -t`
-  - content: `git cat-file -p`
 % end
 
 %= markdown_section begin
@@ -306,9 +312,16 @@ Commits are immutable!
 Always using SHAs to refer to objects is annoying, so ...
 % end
 
+<section>
 %= markdown_section begin
-## ... We Have References
+## References
 
+* Logical Naming
+* Better Usage Behavior
+% end
+
+%= markdown_section begin
+### Types of References
 * branches
   - remotes
 * tags
@@ -321,6 +334,7 @@ Always using SHAs to refer to objects is annoying, so ...
 * inspect with `git show-ref`
 * or just `cat` the file contents
 % end
+</section>
 
 <section>
 %= markdown_section begin
@@ -376,38 +390,6 @@ ref: refs/heads/master
 % end
 
 %= markdown_section begin
-## Actions
-% end
-
-%= markdown_section begin
-### Update Current Branch
-* `git add` stage changes for a commit
-* `git reset` unstage changes
-* `git commit` commit staged changes
-  - move branch pointer
-* `git merge` create a commit with multiple parents
-% end
-
-%= markdown_section begin
-### Change Current Branch
-* `git checkout` get contents of target
-  - if branch, set HEAD
-  - if commit, detatch HEAD
-  - if file, get contents
-* `git reset --hard` move branch pointer
-  - discards changes!
-% end
-
-%= markdown_section begin
-### Working With Remotes
-* `git remote` configure remote sources
-* `git fetch` sync tracked branches
-* `git pull` merge remote changes
-  - `git fetch` + `git merge`
-* `git push` send your changes back to source
-% end
-
-%= markdown_section begin
 ## Object Lifetime
 
 Objects will live in `.git/objects` as long as
@@ -437,6 +419,98 @@ e021a2815 HEAD@{8}: rebase: return result of GetOptionsFromArray in getopt().
 ```
 
 These expire after a shorter time (usually 30 days)
+% end
+
+<section>
+  <h1 style="color: red">High Level</h2>
+</section>
+
+%= markdown_section begin
+## "Areas"
+
+* Working
+* Staging (pre-commit)
+* Stash
+% end
+
+%= markdown_section begin
+### Inspecting Current State
+
+* `git status` - basic information
+* `git diff` - show working (unstaged) changes
+* `git diff --staged` - show staged changes
+* `git log` - see commit history
+% end
+
+%= markdown_section begin
+### Update Current Branch
+
+* `git add` stage changes for a commit
+* `git reset` unstage changes
+* `git commit` commit staged changes
+  - move branch pointer
+* `git merge` create a commit with multiple parents
+% end
+
+%= markdown_section begin
+### More Ways to Add
+
+* `git add -A` - everything
+* `git add path/to/file.ext` - add file
+* `git add path/` - add everything in that path
+* `git add -p` - add partial changes
+% end
+
+%= markdown_section begin
+### Change Current Branch
+* `git checkout` - get contents of target
+  - if branch, set HEAD
+  - if commit, detatch HEAD
+  - if file, get contents
+* `git checkout -b` - create new branch at current point
+* `git cherry-pick` - grab commit from another branch
+* `git reset --hard` - move branch pointer
+  - discards changes!
+% end
+
+<section>
+%= markdown_section begin
+### The Stash
+
+* store changes that you want to keep but not use yet
+* basically stored as temporary commits, that aren't commited
+% end
+
+%= markdown_section begin
+### Stash Stack
+
+Stash is a FILO stack
+
+* push new entries
+* pop entries to get back
+* can access specific entry with special ref
+% end
+
+%= markdown_section begin
+### Stash Actions
+
+* `git stash` - stash all changes
+* `git stash -k` - (keep) stash all unstaged changes
+* `git stash -p` - stash partial changes
+* `git stash show` - see the contents of a stash entry
+* `git stash pop` - get most recent stash entry back
+* `git stash drop` - discard most recent entry
+* `git list` - see all entries
+% end
+</section>
+
+%= markdown_section begin
+### Working With Remotes
+* `git remote` configure remote sources
+* `git fetch` sync tracked branches
+* `git pull` merge remote changes
+  - `git fetch` + `git merge`
+* `git push` send your changes back to source
 % end
 
 %= markdown_section begin
@@ -767,7 +841,6 @@ It is very hard to actually lose history, even if you change it.
 </section>
 
 %#XXX example: https://github.com/ServerCentral/SCOPE/pull/124
-%#TODO git reset --hard for absolute checkout
 
 %= markdown_section begin
 ### Summary

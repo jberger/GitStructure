@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head><base href="GitStructure">
+    
+    
+    
+		<meta charset="utf-8">
+
+    <title>Learn Git By Structure</title>
+
+    <meta content="A presentation about git focusing on structure" name="description">
+    <meta content="Joel Berger" name="author">
+
+		<meta content="yes" name="apple-mobile-web-app-capable">
+		<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style">
+
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+
+		<link href="revealjs/css/reveal.css" rel="stylesheet">
+    
+    <link href="revealjs/css/theme/black.css" id="theme" rel="stylesheet">
+
+		<!-- Theme used for syntax highlighting of code -->
+    <link href="revealjs/lib/css/zenburn.css" rel="stylesheet">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'revealjs/css/print/pdf.css' : 'revealjs/css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="revealjs/lib/js/html5shiv.js"></script>
+		<![endif]-->
+
+    
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <style>
+  .reveal code {
+    padding: 0px 8px;
+    background-color: #404040;
+  }
+  .reveal pre code {
+    padding: 20px;
+  }
+</style>
+
+<section data-markdown><script type="text/template">
+## Learn Git By Structure
+</script></section>
+<section data-markdown><script type="text/template">
+Does Git seem
+
+* Strange?
+* Mystifying?
+* Opaque?
+</script></section>
+<section data-markdown><script type="text/template">
+Git is entirely driven by its structure
+
+* commit graph
+* simple data structures
+* file backed
+</script></section>
+<section>
+  <h1 style="color: red">Low Level
+</h1></section>
+
+<section data-markdown><script type="text/template">
+The graph is built of these three concepts
+
+* digests
+* objects
+* references
+</script></section>
+<section data-markdown><script type="text/template">
+## Preface: Cryptographic Digest Functions
+</script></section>
+<section data-markdown><script type="text/template">
+## Digest Functions:
+
+> compute a meaningful representative identifier from a larger set of data
+</script></section>
+<section data-markdown><script type="text/template">
+## This Is Not Compression
+
+* Not reversible
+* Not one-to-one
+* Possible duplicates
+* ... but those "collisions" are rare
+</script></section>
+<section data-markdown><script type="text/template">
+For example
+
+```shell
+$ echo 'hello' | perl -MList::Util=sum -nE 'say sum map { ord } split //'
+542
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## A Good Digest Function
+
+- Large change in output for small input (easy to see)
+- Hard to predict what change will do (hard to fake)
+</script></section>
+<section data-markdown><script type="text/template">
+Not easy to see
+
+```shell
+$ echo 'hello' | perl -MList::Util=sum -nE 'say sum map { ord } split //'
+542
+$ echo 'hellp' | perl -MList::Util=sum -nE 'say sum map { ord } split //'
+543
+```
+</script></section>
+<section data-markdown><script type="text/template">
+Easy to fake
+
+```shell
+$ echo 'hello' | perl -MList::Util=sum -nE 'say sum map { ord } split //'
+542
+$ echo 'hellp' | perl -MList::Util=sum -nE 'say sum map { ord } split //'
+543
+$ echo 'hdllp' | perl -MList::Util=sum -nE 'say sum map { ord } split //'
+542
+```
+</script></section>
+<section data-markdown><script type="text/template">
+Luckily we have cryptographic digest functions
+
+```shell
+$ echo 'hello' | sha1sum | awk '{print $1}'
+f572d396fae9206628714fb2ce00f72e94f2258f
+$ echo 'hellp' | sha1sum | awk '{print $1}'
+c2e8afc57a12fd9224718c1fa8bbf1b8a02d8390
+$ echo 'hdllp' | sha1sum | awk '{print $1}'
+41af16791b5a836713468cce8daa2f795983d075
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## What Does This Have To Do With Git?
+</script></section>
+<section data-markdown><script type="text/template">
+<img style="width: 50%" src="talktitlecard.png">
+<cite><small><https://www.youtube.com/watch?v=4XpnKHJAok8></small></cite>
+</script></section>
+<section data-markdown><script type="text/template">
+> You can disagree with me as much as you want but during this talk, by definition, anybody who disagrees is stupid and ugly.
+
+-- Linus Torvalds
+
+<cite><small><https://www.youtube.com/watch?v=4XpnKHJAok8></small></cite>
+</script></section>
+<section>
+  <p>
+    <video data-autoplay>
+      <source data-src="linus.mp4" type="video/mp4">
+    </video>
+  </p>
+
+  <div class="fragment">
+    <blockquote>
+      If you know the sha1 of the top of tree you can trust every single piece of it.
+    </blockquote>
+
+    paraphrased from:
+  </div>
+  <p>
+    <small>
+      <a href="https://www.youtube.com/watch?v=4XpnKHJAok8&amp;t=3382">https://www.youtube.com/watch?v=4XpnKHJAok8&amp;t=3382</a>
+    </small>
+  </p>
+</section>
+
+<section data-markdown><script type="text/template">
+> If I have those 20 bytes, I can download a git repository from a completely untrusted source and I can guarantee that they didn't do anything bad to it.
+
+-- Linus Torvalds
+
+<cite><small><https://www.youtube.com/watch?v=4XpnKHJAok8></small></cite>
+</script></section>
+<section data-markdown><script type="text/template">
+## Major Takeaway
+
+The commit hash id is an identifier that digests the entire history of the repository up to that point.
+</script></section>
+<section data-markdown><script type="text/template">
+## How does that work?
+</script></section>
+<section data-markdown><script type="text/template">
+## The .git Directory
+
+* `.git/` contains the entire repository
+* the working directory is just your workspace
+  - you don't need it
+  - used to stage changes
+* repo without working files is called "bare"
+</script></section>
+<section>
+<section data-markdown><script type="text/template">
+## Git Objects
+
+* blob (content, ie file or other metadata)
+* tree (collection of blobs and other trees)
+* commit
+</script></section>
+<section data-markdown><script type="text/template">
+## Every Object is Identified By Its SHA1 Hash
+</script></section>
+<section data-markdown><script type="text/template">
+### Objects
+* live in the `.git/objects` directory of a project
+* inspect with
+  - type: `git cat-file -t`
+  - content: `git cat-file -p`
+</script></section></section>
+
+<section data-markdown><script type="text/template">
+## A Commit Is
+
+* tree
+* parent commit(s)
+* commit message
+* metadata
+
+Identified by _its_ sha1 hash
+</script></section>
+<section data-markdown><script type="text/template">
+```shell
+$ git cat-file -t e3d0802d5961794103c6a8d02f64bf7e1749f3cc
+commit
+$ git cat-file -p e3d0802d5961794103c6a8d02f64bf7e1749f3cc
+tree 2f7e309f3414aa204bf1468b7510567e1cf3233c
+parent 7e9f736539c4d2a6dd7f1dccfda4bb77d3cd608a
+author Joel Berger <joel.a.berger@gmail.com> 1556634504 -0500
+committer Joel Berger <joel.a.berger@gmail.com> 1556634504 -0500
+
+$ git cat-file -t 2f7e309f3414aa204bf1468b7510567e1cf3233c
+tree
+$ git cat-file -p 2f7e309f3414aa204bf1468b7510567e1cf3233c
+100755 blob c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4  Perloku
+100644 blob c91114a2f3eae6bfa6cb24a341a5a54186a0ea97  README.pod
+100644 blob 041ae46cc95ce3f2e8f52e0df3df422099bf3974  cpanfile
+040000 tree 57321dcf90135b3e33e0c18db051316a08435053  ex
+100755 blob a88092e7e5489b581a61fa085da70af535f3e80f  presentation.pl
+040000 tree 7cde0b756cfd92a349fd41a27f8685bbac982cbc  public
+040000 tree 510f6121f6023df413bbbb8f11661e85d55db901  templates
+
+$ git cat-file -t c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4
+blob
+$ git cat-file -p c0a5f45cff9b2318ee1f3f9da7157addcd23f2a4
+#!/bin/sh
+./presentation.pl daemon -l http://*:$PORT -m production
+```
+</script></section>
+<section data-markdown><script type="text/template">
+### The Commit
+* is named by its digest
+* contains data that refers to other objects by digest
+* at each level each digest can be verified
+* therefore:
+
+<blockquote class="fragment">
+  The commit hash id is an identifier that digests the entire history of the repository up to that point.
+</blockquote>
+</script></section>
+<section data-markdown><script type="text/template">
+## But wait ...
+
+... if that's true ...
+</script></section>
+<section data-markdown><script type="text/template">
+## Major Takeaway
+
+Commits are immutable!
+</script></section>
+<section data-markdown><script type="text/template">
+Always using SHAs to refer to objects is annoying, so ...
+</script></section>
+<section>
+<section data-markdown><script type="text/template">
+## References
+
+* Logical Naming
+* Better Usage Behavior
+</script></section>
+<section data-markdown><script type="text/template">
+### Types of References
+* branches
+  - remotes
+* tags
+* HEAD
+</script></section>
+<section data-markdown><script type="text/template">
+### Refs
+* live in the `.git/refs` directory of a project
+* inspect with `git show-ref`
+* or just `cat` the file contents
+</script></section></section>
+
+<section>
+<section data-markdown><script type="text/template">
+## Branches
+
+* have no content of their own
+* simply a pointer that
+  - points to a commit
+  - moves as commits are added
+* lives in `.git/refs/heads`
+</script></section>
+<section data-markdown><script type="text/template">
+```shell
+$ cat .git/refs/heads/master
+2fdb02fdcd1a3d174fe53bd8a94cd56c72dc93dc
+$ git cat-file -t 2fdb02fdcd1a3d174fe53bd8a94cd56c72dc93dc
+commit
+```
+</script></section></section>
+
+<section data-markdown><script type="text/template">
+## The Special HEAD Rereference
+
+* pointer to the current branch (thus current commit)
+* lives in `.git/HEAD`
+
+```shell
+$ cat .git/HEAD
+ref: refs/heads/master
+```
+</script></section>
+<section data-markdown><script type="text/template">
+## Remote Branches
+
+* a special type of branch
+* content from remote repo
+* can't change locally unless you also change remote
+* lives in `.git/refs/remotes`
+* referenced like "origin/name"
+</script></section>
+<section data-markdown><script type="text/template">
+## Tags
+
+* special type of object
+* contains some additional info
+  - message
+  - tagger
+* points to another object, usually a commit
+* lives in `.git/refs/tags`
+</script></section>
+<section data-markdown><script type="text/template">
+## Object Lifetime
+
+Objects will live in `.git/objects` as long as
+
+* something references it
+  - object
+  - reference
+* timeout expires (usually 90 days)
+</script></section>
+<section data-markdown><script type="text/template">
+## Reflog
+
+You can see every object created via `git reflog`.
+
+```shell
+$ git reflog
+a59bf6512 (HEAD -> log_context, origin/log_context) HEAD@{0}: reset: moving to origin/log_context
+daf1ec7d5 HEAD@{1}: checkout: moving from master to log_context
+2a7466423 (origin/master, origin/HEAD, master) HEAD@{2}: pull: Fast-forward
+921fd5ce9 HEAD@{3}: pull: Fast-forward
+181971ff7 HEAD@{4}: checkout: moving from getopt_return to master
+a75edf2da (origin/getopt_return, getopt_return) HEAD@{5}: commit: normalize the getopt tests
+b9672b0ad HEAD@{6}: rebase finished: returning to refs/heads/getopt_return
+b9672b0ad HEAD@{7}: rebase: use ok() instead of is() to check for successful option parsing
+e021a2815 HEAD@{8}: rebase: return result of GetOptionsFromArray in getopt().
+```
+
+These expire after a shorter time (usually 30 days)
+</script></section>
+<section>
+  <h1 style="color: red">High Level
+</h1></section>
+
+<section data-markdown><script type="text/template">
+## "Areas"
+
+* Working (project directory)
+* Staging (`.git/index`)
+* Stash (`.git/refs/stash`)
+</script></section>
+<section data-markdown><script type="text/template">
+### Inspecting Current State
+
+* `git status` - basic information
+* `git diff` - show working (unstaged) changes
+* `git diff --staged` - show staged changes
+* `git log` - see commit history
+</script></section>
+<section data-markdown><script type="text/template">
+### Update Current Branch
+
+* `git add` - stage changes for a commit
+* `git reset` - unstage changes
+* `git commit` - commit staged changes
+  - move branch pointer
+* `git merge` - create a commit with multiple parents
+</script></section>
+<section data-markdown><script type="text/template">
+### More Ways to Add
+
+* `git add -A` - everything
+* `git add path/to/file.ext` - add file
+* `git add path/` - add everything in that path
+* `git add -p` - add partial changes
+</script></section>
+<section data-markdown><script type="text/template">
+### Change Current Branch
+* `git checkout` - get contents of target
+  - if branch, set HEAD
+  - if commit, detatch HEAD
+  - if file, get contents
+* `git checkout -b` - create new branch at current point
+* `git cherry-pick` - grab commit from another branch
+* `git reset --hard` - move branch pointer
+  - discards changes!
+</script></section>
+<section>
+<section data-markdown><script type="text/template">
+### The Stash
+
+* store changes that you want to keep but not use yet
+* basically stored as temporary commits, that aren't commited
+</script></section>
+<section data-markdown><script type="text/template">
+### Stash Stack
+
+Stash is a FILO stack
+
+* push new entries
+* pop entries to get back
+* can access specific entry with special ref
+</script></section>
+<section data-markdown><script type="text/template">
+### Stash Actions
+
+* `git stash` - stash all changes
+* `git stash -k` - (keep) stash all unstaged changes
+* `git stash -p` - stash partial changes
+* `git stash show` - see the contents of a stash entry
+* `git stash pop` - get most recent stash entry back
+* `git stash drop` - discard most recent entry
+* `git list` - see all entries
+</script></section></section>
+
+<section data-markdown><script type="text/template">
+### Working With Remotes
+* `git remote` - configure remote sources
+* `git fetch` - sync tracked branches
+* `git pull` - merge remote changes
+  - `git fetch` + `git merge`
+* `git push` - send your changes back to source
+</script></section>
+<section data-markdown><script type="text/template">
+## Destructive Actions
+
+"destructive" actions "change" content of commits
+
+* commits are immutable
+* objects are long-lived
+</script></section>
+<section data-markdown><script type="text/template">
+## Undo "Destructive" Actions
+
+* "changed" commits:
+  - new content
+  - new SHA
+  - update branch (only actual change)
+* old version still exist, recover by:
+  - knowing original SHAs
+  - using `reflog`
+  - copies from other branches, remotes, clones
+* worst case scenario `git reset --hard`
+</script></section>
+<section data-markdown><script type="text/template">
+## Major Takeaway
+
+It is very hard to actually lose history, even if you change it.
+</script></section>
+<section data-markdown><script type="text/template">
+## "Destructive" Actions
+
+* `git commit --amend` - change previous commit and/or message
+* `git rebase` - change commit/branch's parents
+* `git rebase -i`
+  - change commit order
+  - "squash"/"fixup" commits
+</script></section>
+<section data-markdown><script type="text/template">
+## Destructive Actions on Remotes
+
+* `git push --force-with-lease` push after changing history
+* don't do this to shared branches!
+</script></section>
+<section data-markdown><script type="text/template">
+## Types of Merges
+</script></section>
+<section>
+<h3>Standard Merge</h3>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+
+    master.commit({dotText: 'B', subject: ''});
+
+    master.merge({branch: feature, commitOptions: {dotText: 'C', subject: ''}});
+</script>
+</section>
+
+<section>
+<h3>Fast-Forward (FF) Merge</h3>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+</script>
+<script type="text/gitgraph">
+    const master = graph.branch("master");
+    master.commit({dotText: 'A', subject: ''});
+
+    const feature = graph.branch("feature");
+    feature.commit({dotText: 'X', subject: ''});
+
+    master.merge({branch: feature, fastForward: true});
+</script>
+  <ul>
+    <li>Not really a merge, just moves pointer</li>
+    <li>Only possible when parent has not diverged</li>
+  </ul>
+</section>
+
+<section data-markdown><script type="text/template">
+## Push-to-Remote Requires FF
+
+(by default)
+</script></section>
+<section>
+  <section>
+    <h3>Resolving A Remote Conflict</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+    </script>
+  </section>
+  <section>
+    <h3>First &quot;Merge-Back&quot; From Remote</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+
+        feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+    </script>
+    <ul>
+      <li><code>git pull</code></li>
+    </ul>
+  </section>
+  <section>
+    <h3>Now Push As FF</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch({name: "origin/feature", showLabel: false});
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+
+        feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+
+        master.merge({branch: feature, fastForward: true});
+    </script>
+    <ul>
+      <li><code>git push</code></li>
+      <li>Extra merge commit to audit</li>
+    </ul>
+  </section>
+</section>
+
+<section>
+  <section>
+    <h3>Resolving A Remote Conflict (Simple Rebase)</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: 'X', subject: ''});
+
+        master.commit({dotText: 'B', subject: ''});
+    </script>
+  </section>
+  <section>
+    <h3>Rebase Against Remote</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+        master.commit({dotText: 'B', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: "X'", subject: ''});
+    </script>
+    <ul>
+      <li>
+        <code>git pull --rebase</code>
+        <ul><li><code>git fetch</code> + <code>git rebase</code></li></ul>
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h3>Now Push As FF</h3>
+    <script type="text/gitgraph">
+        const master = graph.branch("origin/feature");
+        master.commit({dotText: 'A', subject: ''});
+        master.commit({dotText: 'B', subject: ''});
+
+        const feature = graph.branch("feature");
+        feature.commit({dotText: "X'", subject: ''});
+
+        master.merge({branch: feature, fastForward: true});
+    </script>
+    <ul>
+      <li><code>git push</code></li>
+      <li>Yay, no merge commits!</li>
+    </ul>
+  </section>
+</section>
+
+<section>
+  <section>
+    <h2>More Complex Merge vs Rebase</h2>
+  </section>
+
+  <section>
+    <h3>Progress On Both Branches</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: 'X', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+
+      feature.commit({dotText: 'Z', subject: ''});
+
+      master.commit({dotText: 'C', subject: ''});
+  </script>
+  </section>
+
+  <section>
+    <h3>Merge Is Not Terrible Here</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: 'X', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+
+      feature.commit({dotText: 'Z', subject: ''});
+
+      master.commit({dotText: 'C', subject: ''});
+
+      master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+  </script>
+    <ul>
+      <li>Any conflict appears on PR</li>
+      <li>Reasonably simple history for reviewer</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>But Sometime The History Is Messy</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: 'X', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+
+      feature.merge({branch: master, commitOptions: {dotText: 'Y', subject: ''}});
+      feature.commit({dotText: 'Z', subject: ''});
+
+      master.commit({dotText: 'C', subject: ''});
+
+      master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+  </script>
+    <ul>
+      <li>Any conflict appears on PR</li>
+      <li>Difficult history for reviewer</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>Before Merging Feature, Rebase!</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: "X'", subject: ''});
+      feature.commit({dotText: "Z'", subject: ''});
+  </script>
+    <ul>
+      <li>Author can fix conflicts before PR</li>
+      <li>No merge history for reviewer to consider</li>
+    </ul>
+  </section>
+
+  <section>
+    <h3>FF Merge Loses Branch</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: "X'", subject: ''});
+      feature.commit({dotText: "Z'", subject: ''});
+
+      master.merge({branch: feature, fastForward: true});
+  </script>
+    <ul>
+      <li>Technically Ok</li>
+      <li>Nice to remember work on branch</li>
+    </ul>
+  </section>
+
+  <section>
+  <h3>Preserve Record of Branch</h3>
+  <script type="text/gitgraph">
+      const master = graph.branch("master");
+      master.commit({dotText: 'A', subject: ''});
+
+      master.commit({dotText: 'B', subject: ''});
+      master.commit({dotText: 'C', subject: ''});
+
+      const feature = graph.branch("feature");
+      feature.commit({dotText: "X'", subject: ''});
+      feature.commit({dotText: "Z'", subject: ''});
+
+      master.merge({branch: feature, commitOptions: {dotText: 'D', subject: ''}});
+  </script>
+    <ul>
+      <li><code>git merge --no-ff</code></li>
+      <li>Can still push to remote, the &quot;merge&quot; is FF-able</li>
+    <ul>
+  </ul></ul></section>
+</section>
+
+
+<section data-markdown><script type="text/template">
+### Summary
+
+* Git data is simple, easy to inspect.
+* Commit id digests entire history of the repo.
+* Commits are immutable!
+* Hard to actually lose history, even if you change it.
+</script></section>
+			</div>
+
+		</div>
+
+		<script src="revealjs/lib/js/head.min.js"></script>
+		<script src="revealjs/js/reveal.js"></script>
+
+		<script>
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+      
+      var init = {"center":true,"controls":true,"history":true,"progress":true,"transition":"slide"};
+			// Optional reveal.js plugins
+      init.dependencies = [
+        { src: 'revealjs/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+        { src: 'revealjs/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: 'revealjs/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        { src: 'revealjs/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        { src: 'revealjs/plugin/zoom-js/zoom.js', async: true },
+        { src: 'revealjs/plugin/notes/notes.js', async: true },
+        { src: 'reveal-sampler/sampler.js' }
+      ];
+
+      init.dependencies.push({src: 'https://cdn.jsdelivr.net/npm/@gitgraph/js'});
+
+let graphOptions = {
+  orientation: 'horizontal',
+  author: 'Joel Berger <joel.a.berger@gmail.com>',
+};
+
+function initGraph(elem) {
+  "use strict";
+  try {
+    const f = new Function('graph', elem.innerHTML);
+    const container = document.createElement('div');
+    elem.parentNode.insertBefore(container, elem.nextSibling);
+    elem.parentNode.removeChild(elem);
+    const graph = new GitgraphJS.createGitgraph(container, Object.assign({}, graphOptions, elem.dataset));
+    f(graph);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+Reveal.addEventListener('slidechanged', (e) => {
+  const graphs = e.currentSlide.querySelectorAll('script[type="text/gitgraph"]');
+  if (! graphs.length) return;
+
+  graphs.forEach(container => initGraph(container));
+  // force reveal to compute top offset
+  Reveal.layout();
+});
+
+			Reveal.initialize(init);
+
+		</script>
+
+    
+	</body>
+</html>

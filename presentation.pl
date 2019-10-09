@@ -2,7 +2,13 @@ use Mojolicious::Lite;
 
 plugin 'RevealJS';
 
-any '/' => { template => 'index', layout => 'revealjs' };
+any '/' => {
+  template => 'index',
+  layout => 'revealjs',
+  author => 'Joel Berger',
+  title => 'Learn Git By Structure',
+  description => 'A presentation about git focusing on structure',
+};
 
 app->start;
 

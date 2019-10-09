@@ -376,6 +376,7 @@ ref: refs/heads/master
 * content from remote repo
 * can't change locally unless you also change remote
 * lives in `.git/refs/remotes`
+* referenced like "origin/name"
 % end
 
 %= markdown_section begin
@@ -445,11 +446,11 @@ These expire after a shorter time (usually 30 days)
 %= markdown_section begin
 ### Update Current Branch
 
-* `git add` stage changes for a commit
-* `git reset` unstage changes
-* `git commit` commit staged changes
+* `git add` - stage changes for a commit
+* `git reset` - unstage changes
+* `git commit` - commit staged changes
   - move branch pointer
-* `git merge` create a commit with multiple parents
+* `git merge` - create a commit with multiple parents
 % end
 
 %= markdown_section begin
@@ -506,11 +507,11 @@ Stash is a FILO stack
 
 %= markdown_section begin
 ### Working With Remotes
-* `git remote` configure remote sources
-* `git fetch` sync tracked branches
-* `git pull` merge remote changes
+* `git remote` - configure remote sources
+* `git fetch` - sync tracked branches
+* `git pull` - merge remote changes
   - `git fetch` + `git merge`
-* `git push` send your changes back to source
+* `git push` - send your changes back to source
 % end
 
 %= markdown_section begin
@@ -523,7 +524,7 @@ Stash is a FILO stack
 % end
 
 %= markdown_section begin
-## Undoing "Destructive" Actions
+## Undo "Destructive" Actions
 
 * "changed" commits:
   - new content
@@ -545,8 +546,8 @@ It is very hard to actually lose history, even if you change it.
 %= markdown_section begin
 ## "Destructive" Actions
 
-* `git commit --amend` change previous commit and/or message
-* `git rebase` change commit/branch's parents
+* `git commit --amend` - change previous commit and/or message
+* `git rebase` - change commit/branch's parents
 * `git rebase -i`
   - change commit order
   - "squash"/"fixup" commits

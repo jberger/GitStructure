@@ -429,9 +429,9 @@ These expire after a shorter time (usually 30 days)
 %= markdown_section begin
 ## "Areas"
 
-* Working
-* Staging (pre-commit)
-* Stash
+* Working (project directory)
+* Staging (`.git/index`)
+* Stash (`.git/refs/stash`)
 % end
 
 %= markdown_section begin
